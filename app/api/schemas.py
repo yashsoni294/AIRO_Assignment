@@ -5,6 +5,7 @@ class QueryRequest(BaseModel):
     query: str = Field(..., description="Natural language query from user")
     top_k: Optional[int] = Field(5, description="Limit number of rows returned")
     debug: Optional[bool] = Field(False, description="Return intermediate steps")
+    database_url: str
 
 class QueryResponse(BaseModel):
     success: bool

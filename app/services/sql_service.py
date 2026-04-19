@@ -4,7 +4,7 @@ from app.graph.builder import get_graph
 
 logger = logging.getLogger(__name__)
 
-def run_text_to_sql(query: str, top_k: int = 5, debug: bool = False) -> Dict[str, Any]:
+def run_text_to_sql(query: str, top_k: int, debug: bool, database_url: str) -> Dict[str, Any]:
     """
     Main service function that handles the full Text-to-SQL flow using LangGraph
     """
@@ -14,6 +14,7 @@ def run_text_to_sql(query: str, top_k: int = 5, debug: bool = False) -> Dict[str
     state = {
         "query": query,
         "top_k": top_k,
+        "database_url": database_url,
         "sql_query": None,
         "result": None,
         "error": None,

@@ -28,3 +28,5 @@ class GraphState(TypedDict, total=False):
 
     intent: Optional[str]
 
+    database_url: Optional[str]
+

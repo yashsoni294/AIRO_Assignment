@@ -4,12 +4,12 @@ from app.toolkit.sql_toolkit import get_sql_toolkit
 
 logger = logging.getLogger(__name__)
 
-def get_sql_agent():
+def get_sql_agent(database_url: str):
     """
     Create SQL Agent using LangChain toolkit
     """
     logger.info("Creating SQL agent")
-    toolkit = get_sql_toolkit()
+    toolkit = get_sql_toolkit(database_url)
     logger.info("SQL toolkit obtained")
 
     agent = create_sql_agent(

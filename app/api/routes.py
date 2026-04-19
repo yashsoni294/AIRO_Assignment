@@ -18,9 +18,9 @@ def query_sql(request: QueryRequest):
         result = run_text_to_sql(
             query=request.query,
             top_k=request.top_k,
-            debug=request.debug
+            debug=request.debug,
+            database_url=request.database_url
         )
-
         execution_time = round(time.time() - start_time, 3)
         logger.info(f"Query completed successfully in {execution_time}s")
         return QueryResponse(

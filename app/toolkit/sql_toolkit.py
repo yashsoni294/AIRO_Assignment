@@ -7,15 +7,15 @@ from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-def get_sql_toolkit():
+def get_sql_toolkit(database_url:str):
     """
     Initialize SQLDatabaseToolkit
     """
     logger.info("Initializing SQL toolkit")
     
     # Database connection
-    logger.info(f"Connecting to database with URL: {settings.DATABASE_URL}")
-    db = SQLDatabase.from_uri(settings.DATABASE_URL)
+    logger.info(f"Connecting to database with URL: {database_url}")
+    db = db = SQLDatabase.from_uri(database_url)
     logger.info("Database connection established")
     
     # LLM

@@ -15,7 +15,8 @@ def agent_node(state: GraphState) -> GraphState:
     try:
         # 🔹 Initialize agent
         logger.info("Initializing SQL agent")
-        agent = get_sql_agent()
+        database_url = state.get("database_url")
+        agent = get_sql_agent(database_url)
 
         user_query = state["query"]
         logger.info(f"Processing user query: '{user_query}'")
