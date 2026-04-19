@@ -1,19 +1,19 @@
 import logging
 from app.toolkit.agent import get_sql_agent
+from app.toolkit.sql_callback_handler import SQLCallbackHandler
 from app.graph.state import GraphState
 
 logger = logging.getLogger(__name__)
 
-
 def agent_node(state: GraphState) -> GraphState:
     """
-    LangGraph node that uses LangChain SQL Agent to generate + execute SQL
+    LangGraph node that uses LangChain SQL Agent with SQL callback extraction
     """
 
     logger.info("Starting agent node")
 
     try:
-        # Initialize agent
+        # 🔹 Initialize agent
         logger.info("Initializing SQL agent")
         agent = get_sql_agent()
 
@@ -23,11 +23,15 @@ def agent_node(state: GraphState) -> GraphState:
         if state.get("steps") is not None:
             state["steps"].append("Agent started")
 
-        # IMPORTANT: invoke with intermediate steps
-        logger.info("Invoking SQL agent with intermediate steps")
-        response = agent.invoke({
-            "input": user_query
-        })
+        # 🔥 Initialize SQL callback
+        sql_callback = SQLCallbackHandler()
+
+        # 🔥 Invoke agent with callback
+        logger.info("Invoking SQL agent with callback")
+        response = agent.invoke(
+            {"input": user_query},
+            config={"callbacks": [sql_callback]}
+        )
 
         logger.info("Agent invocation completed")
 
@@ -40,36 +44,38 @@ def agent_node(state: GraphState) -> GraphState:
 
         logger.info(f"Agent final output: {output}")
 
-        # NEW: Extract SQL from intermediate steps
-        extracted_sql = None
+        # 🔥 Primary: Get SQL from callback
+        extracted_sql = sql_callback.get_last_query()
 
-        intermediate_steps = response.get("intermediate_steps", [])
+        # 🔁 Fallback: Try intermediate steps (safety net)
+        if not extracted_sql:
+            logger.warning("Callback did not capture SQL, trying fallback extraction")
 
-        logger.info(f"Intermediate steps count: {len(intermediate_steps)}")
+            intermediate_steps = response.get("intermediate_steps", [])
 
-        for step in intermediate_steps:
-            try:
-                action, observation = step
+            for step in intermediate_steps:
+                try:
+                    action, _ = step
 
-                # Tool input usually contains SQL
-                if hasattr(action, "tool_input"):
-                    tool_input = action.tool_input
+                    if hasattr(action, "tool_input"):
+                        tool_input = action.tool_input
 
-                    if isinstance(tool_input, str) and "select" in tool_input.lower():
-                        extracted_sql = tool_input
-                        logger.info(f"Extracted SQL: {extracted_sql}")
-                        break
+                        if isinstance(tool_input, str) and "select" in tool_input.lower():
+                            extracted_sql = tool_input
+                            logger.info(f"Fallback SQL extracted: {extracted_sql}")
+                            break
 
-            except Exception as parse_error:
-                logger.warning(f"Failed to parse step: {parse_error}")
+                except Exception as parse_error:
+                    logger.warning(f"Failed to parse step: {parse_error}")
 
-        # Save SQL if found
+        # 🔹 Save SQL if found
         if extracted_sql:
             state["sql_query"] = extracted_sql
+            logger.info(f"Final SQL captured: {extracted_sql}")
         else:
-            logger.warning("No SQL query could be extracted")
+            logger.warning("No SQL query could be captured")
 
-        # Track step
+        # 🔹 Track step
         if state.get("steps") is not None:
             state["steps"].append("Agent completed")
 

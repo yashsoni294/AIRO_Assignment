@@ -16,7 +16,8 @@ def get_sql_agent():
         llm=toolkit.llm,
         toolkit=toolkit,
         verbose=True,
-        return_intermediate_steps=True
+        return_intermediate_steps=True,
+        handle_parsing_errors=True
     )
     logger.info("SQL agent created successfully")
 
