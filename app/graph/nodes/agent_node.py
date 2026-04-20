@@ -13,7 +13,7 @@ def agent_node(state: GraphState) -> GraphState:
     logger.info("Starting agent node")
 
     try:
-        # 🔹 Initialize agent
+        # Initialize agent
         logger.info("Initializing SQL agent")
         database_url = state.get("database_url")
         agent = get_sql_agent(database_url)
@@ -24,10 +24,10 @@ def agent_node(state: GraphState) -> GraphState:
         if state.get("steps") is not None:
             state["steps"].append("Agent started")
 
-        # 🔥 Initialize SQL callback
+        # Initialize SQL callback
         sql_callback = SQLCallbackHandler()
 
-        # 🔥 Invoke agent with callback
+        # Invoke agent with callback
         logger.info("Invoking SQL agent with callback")
         response = agent.invoke(
             {"input": user_query},
@@ -36,19 +36,19 @@ def agent_node(state: GraphState) -> GraphState:
 
         logger.info("Agent invocation completed")
 
-        # 🔹 Store raw response
+        # Store raw response
         state["raw_agent_output"] = response
 
-        # 🔹 Extract final answer
+        # Extract final answer
         output = response.get("output")
         state["result"] = [{"response": output}]
 
         logger.info(f"Agent final output: {output}")
 
-        # 🔥 Primary: Get SQL from callback
+        # Primary: Get SQL from callback
         extracted_sql = sql_callback.get_last_query()
 
-        # 🔁 Fallback: Try intermediate steps (safety net)
+        # Fallback: Try intermediate steps (safety net)
         if not extracted_sql:
             logger.warning("Callback did not capture SQL, trying fallback extraction")
 
@@ -69,14 +69,14 @@ def agent_node(state: GraphState) -> GraphState:
                 except Exception as parse_error:
                     logger.warning(f"Failed to parse step: {parse_error}")
 
-        # 🔹 Save SQL if found
+        # Save SQL if found
         if extracted_sql:
             state["sql_query"] = extracted_sql
             logger.info(f"Final SQL captured: {extracted_sql}")
         else:
             logger.warning("No SQL query could be captured")
 
-        # 🔹 Track step
+        # Track step
         if state.get("steps") is not None:
             state["steps"].append("Agent completed")
 
